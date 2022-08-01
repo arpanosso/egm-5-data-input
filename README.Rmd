@@ -16,27 +16,127 @@ knitr::opts_chunk$set(
 Todos os dados provenientes da máquina EGM-5 devem ser colocados na pasta **data-raw**, posteriormente, os dados pré-processados são salvos na pasta **data**.
 
 ## Carregando os pacotes
-```{r}
+```{r,message=FALSE,error=FALSE,warning=FALSE}
 library(tidyverse)
 library(readr)
+library(stringr)
+library(janitor)
+library(lubridate)
+library(writexl)
 ```
 
 ## Definindo os caminhos dos arquivos txt
 ```{r}
 caminhos_arquivos <- list.files(path = "data-raw",
-           pattern = ".txt",
+           pattern = ".TXT|.txt",
            full.names = TRUE)
 ```
 
-## 
+## Estrutura do arquivo original
+
+As $17$ primeiras colunas são listadas abaixo, após a leitura do arquivos, deve-se adicionar, organizar, $5$ parâmetros restantes.
+
+```{r echo=FALSE, fig.cap="",fig.align='center',out.width = "600px"}
+knitr::include_graphics("https://raw.githubusercontent.com/arpanosso/egm-5-data-input/master/img/data_format_1.png")
+```
+
+```{r,message=FALSE,error=FALSE,warning=FALSE}
+df <- read_csv(caminhos_arquivos[26]) %>% clean_names() %>% 
+  drop_na() %>% 
+  separate(msoil,c("msoil","process", "dc", "dt", "srl_rate", "srq_rate"),",") %>% 
+  mutate(
+    across(
+      .cols = c("msoil","process", "dc", "dt", "srl_rate", "srq_rate"),
+      .fns = as.numeric
+    ),
+   date = as.Date(date, format="%d/%m/%y")
+  ) 
+
+point_count <- 0
+df$point <- NA
+for(i in 1:nrow(df)){
+  if(df$dt[i] == 1) point_count = point_count + 1 
+  df$point[i] <- point_count
+}
+
+
+```
+
+Abaixo segue os $5$ parâmetros a serem manipulados
+
+```{r echo=FALSE, fig.cap="",fig.align='center',out.width = "600px"}
+knitr::include_graphics("https://raw.githubusercontent.com/arpanosso/egm-5-data-input/master/img/data_format_2.png")
+```
+```{r}
+head(df) 
+```
+
+
 
 ```{r}
-df <- read_csv(caminhos_arquivos)
+df %>% 
+  ggplot(aes(x=dt, y=co2)) +
+  geom_point() +
+  facet_wrap(~point)
+```
+## Salvar o Banco de dados em .xlsx
+
+```{r}
+caminho_saida <- str_replace(caminhos_arquivos[26],".TXT|.txt",".xlsx")
+write_xlsx(df,caminho_saida) 
 ```
 
 
 
 
+## Calcular a emissão de CO~2~ do solo para cada ponto em cada arquivo.
+
+Será utilizada a abordagem de **Parkinson (1981)**
+
+
+```{r echo=FALSE, fig.cap="",fig.align='center',out.width = "600px"}
+knitr::include_graphics("https://raw.githubusercontent.com/arpanosso/egm-5-data-input/master/img/data_format_3.png")
+```
+
+```{r}
+df
+
+
+```
+
+
+
+
+
+
+### Criando a função para ler vários arquivos, faz os cálculos das estatísticas 
+dos arquivos.
+
+```{r,message=FALSE,error=FALSE,warning=FALSE}
+egm_5_reader <- function(pasta){
+  print(pasta)
+  df = read_csv(pasta) %>% clean_names() %>% 
+      drop_na() %>% 
+      separate(msoil,c("msoil","process", "dc", "dt", "srl_rate", "srq_rate"),",") %>% 
+      mutate(
+        across(
+          .cols = c("msoil","process", "dc", "dt", "srl_rate", "srq_rate"),
+          .fns = as.numeric
+        ),
+        date = as.Date(date, format="%d/%m/%y")
+      ) 
+    if(nrow(df)!=0){
+    point_count = 0
+    df$point = NA
+    for(i in 1:nrow(df)){
+      if(df$dt[i] == 1) point_count = point_count + 1 
+      df$point[i] = point_count
+    }
+    caminho_saida <- str_replace(pasta,".TXT|.txt",".xlsx")
+  write_xlsx(df,caminho_saida) }
+} 
+map(caminhos_arquivos,~egm_5_reader(.x))
+```
 
 
 
