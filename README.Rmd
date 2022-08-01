@@ -1,0 +1,43 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Script Para Leitura e manipulação dos dados da EGM-5
+
+Todos os dados provenientes da máquina EGM-5 devem ser colocados na pasta **data-raw**, posteriormente, os dados pré-processados são salvos na pasta **data**.
+
+## Carregando os pacotes
+```{r}
+library(tidyverse)
+library(readr)
+```
+
+## Definindo os caminhos dos arquivos txt
+```{r}
+caminhos_arquivos <- list.files(path = "data-raw",
+           pattern = ".txt",
+           full.names = TRUE)
+```
+
+## 
+
+```{r}
+df <- read_csv(caminhos_arquivos)
+```
+
+
+
+
+
+
+
+
