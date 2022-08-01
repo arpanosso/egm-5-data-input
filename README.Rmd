@@ -204,7 +204,7 @@ egm_5_reader <- function(pasta){
       Dn <- Pressure*100 * Dv/R/(Tair+273.105)
       fo2 <- (-Dn)*32*1000*A
       
-      tb <- c(Tair_m=Tair, Presurre_m = Pressure, Taxa_Linear = srl_rate_m, Taxa_quad = srq_rate_m, FCO2= fco2, FO2 = fo2,Ts=Tsoil, Ms = Msoil)
+      tb <- c(Ponto = points[i],Tair_m=Tair, Presurre_m = Pressure, Taxa_Linear = srl_rate_m, Taxa_quad = srq_rate_m, FCO2= fco2, FO2 = fo2,Ts=Tsoil, Ms = Msoil)
       if(i == 1 ){ 
         tb_final <- tb
       }else{
